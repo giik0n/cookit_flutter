@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>411514193480-ror08jl9rf1mtaeohct5le50eruukimb.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.411514193480-ror08jl9rf1mtaeohct5le50eruukimb</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>411514193480-9dnqvtbcleova0vog84ej9qpb5jhcp6r.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDdXFcHbWfij_7KRv86tL6k7FFw9X9nyOQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>411514193480</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.alexpan.cookit</string>
+	<key>PROJECT_ID</key>
+	<string>cook-it-251a1</string>
+	<key>STORAGE_BUCKET</key>
+	<string>cook-it-251a1.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:411514193480:ios:568c019ffcc858539bba7d</string>
+	<key>DATABASE_URL</key>
+	<string>https://cook-it-251a1.firebaseio.com</string>
+</dict>
+</plist>
