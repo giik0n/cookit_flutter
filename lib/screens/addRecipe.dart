@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cookit/models/Ingridient.dart';
 import 'package:cookit/models/IngridientCounts.dart';
 import 'package:cookit/models/Recipe.dart';
@@ -5,6 +7,7 @@ import 'package:cookit/services/database.dart';
 import 'package:cookit/shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:numberpicker/numberpicker.dart';
 
 class AddRecipe extends StatefulWidget {
@@ -15,6 +18,19 @@ class AddRecipe extends StatefulWidget {
 }
 
 class _AddRecipeState extends State<AddRecipe> {
+  @override
+  void initState() {
+    super.initState();
+    picker = ImagePicker();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    picker = null;
+  }
+
+  ImagePicker picker;
   List<Ingridient> searchIntersections = [];
   TextEditingController controller = TextEditingController();
   String valueTmp = "";
@@ -27,29 +43,109 @@ class _AddRecipeState extends State<AddRecipe> {
     var dataKey = GlobalKey();
     Widget addPhotoW = Padding(
       padding: EdgeInsets.all(8),
-      child: Container(
-        height: 300,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: Theme.of(context).canvasColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context).backgroundColor.withOpacity(0.7),
-                    spreadRadius: 3,
-                    blurRadius: 5,
-                    offset: Offset(0, 1), // changes position of shadow
+      child: InkWell(
+        onTap: () {
+          showModalBottomSheet(
+              context: context,
+              builder: (BuildContext bc) {
+                return SafeArea(
+                  child: Container(
+                    child: new Wrap(
+                      children: <Widget>[
+                        new ListTile(
+                            leading: new Icon(Icons.photo_library),
+                            title: new Text('Photo Library'),
+                            onTap: () {
+                              _imgFromGallery(context);
+                              Navigator.of(context).pop();
+                            }),
+                        new ListTile(
+                          leading: new Icon(Icons.photo_camera),
+                          title: new Text('Camera'),
+                          onTap: () {
+                            _imgFromCamera(context);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ]),
-            child: Center(
-              child: Icon(Icons.add_a_photo_outlined),
+                );
+              });
+        },
+        child: Container(
+          height: 270,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: Theme.of(context).canvasColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).backgroundColor.withOpacity(0.7),
+                      spreadRadius: 3,
+                      blurRadius: 5,
+                      offset: Offset(0, 1), // changes position of shadow
+                    ),
+                  ]),
+              child: Center(
+                child: Icon(Icons.add_a_photo_outlined),
+              ),
             ),
           ),
         ),
       ),
     );
+
+    Widget imageView = recipeTmp.photo != null
+        ? Stack(children: [
+            Container(
+              height: 270,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Theme.of(context).canvasColor,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context)
+                                .backgroundColor
+                                .withOpacity(0.7),
+                            spreadRadius: 3,
+                            blurRadius: 5,
+                            offset: Offset(0, 1), // changes position of shadow
+                          ),
+                        ]),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.file(
+                        recipeTmp.photo,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 24, 8),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      recipeTmp.photo = null;
+                    });
+                  },
+                ),
+              ),
+            ),
+          ])
+        : null;
 
     Widget searchListW = Padding(
       padding: const EdgeInsets.only(top: 64.0),
@@ -66,71 +162,75 @@ class _AddRecipeState extends State<AddRecipe> {
                 for (var i = 0; i < searchIntersections.length; i++)
                   Column(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.6),
-                                spreadRadius: 1,
-                                blurRadius: 3,
-                                offset:
-                                    Offset(1, 2), // changes position of shadow
-                              ),
-                            ],
-                            color:
-                                ingridientColors[searchIntersections[i].color],
-                            borderRadius: BorderRadius.circular(8)),
-                        child: GestureDetector(
-                          onTap: () async {
-                            print(dataKey.currentContext);
-                            print(recipeTmp.ingridientCounts.length);
+                      GestureDetector(
+                        onTap: () async {
+                          print(dataKey.currentContext);
+                          print(recipeTmp.ingridientCounts.length);
 
-                            double count = await showDialog(
-                              context: context,
-                              builder: (_) => NumberPickerDialog.decimal(
-                                  title: Text("Choose portion in " +
-                                      ((searchIntersections[i].isInGramms == 0)
-                                          ? "pieces"
-                                          : "100 grams")),
-                                  minValue: 1,
-                                  maxValue: 100,
-                                  initialDoubleValue: 1.0),
-                            );
-                            if (count != null) {
-                              var ingCount = IngridientCounts(
-                                  count: count,
-                                  ingridient: searchIntersections[i]);
-                              setState(() {
-                                controller.text = "";
-                                int len = recipeTmp.ingridientCounts
-                                    .where((element) =>
+                          double count = await showDialog(
+                            context: context,
+                            builder: (_) => NumberPickerDialog.decimal(
+                                title: Text("Choose portion in " +
+                                    ((searchIntersections[i].isInGramms == 0)
+                                        ? "pieces"
+                                        : "100 grams")),
+                                minValue: 1,
+                                maxValue: 100,
+                                initialDoubleValue: 1.0),
+                          );
+                          if (count != null) {
+                            var ingCount = IngridientCounts(
+                                count: count,
+                                ingridient: searchIntersections[i]);
+                            setState(() {
+                              controller.text = "";
+                              int len = recipeTmp.ingridientCounts
+                                  .where((element) =>
+                                      element.ingridient.name ==
+                                      searchIntersections[i].name)
+                                  .length;
+
+                              if (len > 0) {
+                                int index = recipeTmp.ingridientCounts
+                                    .indexWhere((element) =>
                                         element.ingridient.name ==
-                                        searchIntersections[i].name)
-                                    .length;
-                                print("len:" + len.toString());
-                                if (len > 0) {
-                                  print("exists");
-                                  int index = recipeTmp.ingridientCounts
-                                      .indexWhere((element) =>
-                                          element.ingridient.name ==
-                                          searchIntersections[i].name);
-                                  recipeTmp.ingridientCounts
-                                      .elementAt(index)
-                                      .count += count;
-                                } else {
-                                  print("not exists");
-                                  recipeTmp.ingridientCounts.add(ingCount);
-                                }
-                              });
-                            }
-                          },
+                                        searchIntersections[i].name);
+                                recipeTmp.ingridientCounts
+                                    .elementAt(index)
+                                    .count += count;
+                              } else {
+                                recipeTmp.ingridientCounts.add(ingCount);
+                              }
+                            });
+                          }
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.6),
+                                  spreadRadius: 1,
+                                  blurRadius: 3,
+                                  offset: Offset(1, 2),
+                                ),
+                              ],
+                              color: ingridientColors[
+                                  searchIntersections[i].color],
+                              borderRadius: BorderRadius.circular(8)),
                           child: Padding(
                             key: i == 0 ? dataKey : null,
                             padding: const EdgeInsets.all(16.0),
                             child: Container(
                               width: MediaQuery.of(context).size.width * 0.9,
-                              child: Text(
-                                capitalize(searchIntersections[i].name),
+                              child: Row(
+                                children: [
+                                  searchIntersections[i].isVerified
+                                      ? Icon(Icons.verified_user)
+                                      : SizedBox.shrink(),
+                                  Text(
+                                    capitalize(searchIntersections[i].name),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -252,14 +352,28 @@ class _AddRecipeState extends State<AddRecipe> {
                                         backgroundColor: ingridientColors[
                                             recipeTmp.ingridientCounts[i]
                                                 .ingridient.color],
-                                        label: Text(recipeTmp
-                                                .ingridientCounts[i].count
-                                                .toString() +
-                                            " x " +
-                                            capitalize(recipeTmp
-                                                .ingridientCounts[i]
-                                                .ingridient
-                                                .name)),
+                                        label: recipeTmp.ingridientCounts[i]
+                                                    .ingridient.isInGramms ==
+                                                0
+                                            ? Text(recipeTmp
+                                                    .ingridientCounts[i].count
+                                                    .toString() +
+                                                " x " +
+                                                capitalize(recipeTmp
+                                                    .ingridientCounts[i]
+                                                    .ingridient
+                                                    .name))
+                                            : Text((recipeTmp
+                                                            .ingridientCounts[i]
+                                                            .count *
+                                                        100)
+                                                    .toInt()
+                                                    .toString() +
+                                                "g " +
+                                                capitalize(recipeTmp
+                                                    .ingridientCounts[i]
+                                                    .ingridient
+                                                    .name)),
                                         onDeleted: () {
                                           recipeTmp.ingridientCounts
                                               .removeAt(i);
@@ -301,7 +415,10 @@ class _AddRecipeState extends State<AddRecipe> {
       body: Container(
         child: ListView(
           shrinkWrap: true,
-          children: [addPhotoW, ingridientsW],
+          children: [
+            recipeTmp.photo == null ? addPhotoW : imageView,
+            ingridientsW
+          ],
         ),
       ),
     );
@@ -430,6 +547,126 @@ class _AddRecipeState extends State<AddRecipe> {
           ),
         ),
       ),
+    );
+  }
+
+  _imgFromCamera(context) async {
+    //final picker = ImagePicker();
+    final pickedFile =
+        await picker.getImage(source: ImageSource.gallery, imageQuality: 50);
+    if (pickedFile != null) {
+      int fileLength = await File(pickedFile.path).length();
+      print(fileLength);
+      if (fileLength > 3000000) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text(
+                    "Your file is too big, please select another. (Max size 3 MB)"),
+                actions: [
+                  FlatButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text("Continue"))
+                ],
+              );
+            });
+      } else {
+        confirmAndPush(context, pickedFile);
+      }
+    }
+  }
+
+  _imgFromGallery(context) async {
+    //final picker = ImagePicker();
+    final pickedFile =
+        await picker.getImage(source: ImageSource.gallery, imageQuality: 100);
+    if (pickedFile != null) {
+      int fileLength = await File(pickedFile.path).length();
+      print(fileLength);
+      if (fileLength > 3000000) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text(
+                    "Your file is too big, please select another. (Max size 3 MB)"),
+                actions: [
+                  FlatButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text("Continue"))
+                ],
+              );
+            });
+      } else {
+        confirmAndPush(context, pickedFile);
+      }
+    }
+  }
+
+  confirmAndPush(context, PickedFile file) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: Container(
+            width: double.minPositive,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    "Confirm image?",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(file.path),
+                      height: 200,
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    FlatButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text("Cancel"),
+                    ),
+                    FlatButton(
+                      onPressed: () async {
+                        setState(() {
+                          recipeTmp.photo = File(file.path);
+                        });
+
+                        //Navigator.of(context).pop();
+
+                        // await _taskProvider.pushImageToTask(
+                        //     file, _listId, _itemObject, context, update);
+                        // update(() {});
+                        Navigator.of(context).pop();
+                      },
+                      child: Text("Submit"),
+                    )
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

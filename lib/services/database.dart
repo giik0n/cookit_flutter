@@ -43,7 +43,7 @@ class DatabaseService {
             isInGramms: element.data['isInGrams'],
             isVerified: element.data['isVerified'],
             color: element.data['color'],
-            kcal: element.data['kcal']));
+            kcal: double.parse(element.data['kcal'].toString())));
       });
     });
 
@@ -54,6 +54,7 @@ class DatabaseService {
     List<String> caseSearchList = List();
     var splitResult = caseNumber.split(" ");
     for (var i = 0; i < splitResult.length; i++) {
+      caseSearchList.add(splitResult[i].substring(1));
       String temp = "";
       for (int j = 0; j < splitResult[i].length; j++) {
         temp = temp + splitResult[i][j];

@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:cookit/models/IngridientCounts.dart';
 
 class Recipe {
   String id;
   String title;
   String about;
-  String photo;
+  File photo;
   String videoLink;
   List<double> rating;
   List<IngridientCounts> ingridientCounts;
