@@ -9,6 +9,8 @@ class DatabaseService {
       Firestore.instance.collection("users");
   final CollectionReference ingridientsCollection =
       Firestore.instance.collection("ingridients");
+  final CollectionReference categoriesCollection =
+      Firestore.instance.collection("categories");
 
   Future initUser(User user) async {
     return await usersCollection.document(user.id).setData({
@@ -31,8 +33,6 @@ class DatabaseService {
   Future<List<Ingridient>> searchIngridient(String text) async {
     List<Ingridient> ingridients = [];
     await ingridientsCollection
-        // .where('title', isGreaterThanOrEqualTo: text.toLowerCase())
-        // .where('title', isLessThan: text.toLowerCase() + 'z')
         .where("caseSearch", arrayContainsAny: text.toLowerCase().split(" "))
         .getDocuments()
         .then((value) {
@@ -59,10 +59,10 @@ class DatabaseService {
       for (int j = 0; j < splitResult[i].length; j++) {
         temp = temp + splitResult[i][j];
         caseSearchList.add(temp);
-        print(temp);
       }
     }
-
     return caseSearchList;
   }
+
+  initCategories() {}
 }
